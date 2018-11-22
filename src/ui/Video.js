@@ -29,9 +29,8 @@ export default class Video extends Component {
                     method: 'GET'
                 }).then(response => {
                 if (response.status === 200) {
-                    response.body.getReader().cancel();
-                    this.setState({downloadUrl: App.URL + "/" + this.props.video.id})
-                    this.props.onComplete();
+                    this.setState({downloadUrl: App.URL + "/" + this.props.video.id+"/download"});
+                    this.props.onComplete()
                 }
                 else {
                     setTimeout(this.fetchVideo, Video.FETCH_VIDEO_PERIODIC)
