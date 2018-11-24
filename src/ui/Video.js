@@ -1,23 +1,33 @@
 import React, {Component} from 'react'
 import App from '../App.js'
+import Button from '@material-ui/core/Button'
+import {PulseLoader} from 'react-spinners';
 
 export default class Video extends Component {
     static FETCH_VIDEO_PERIODIC = 1000;
 
     constructor(props) {
         super(props);
-        this.state = {downloadUrl: null};
+        this.state = {downloadUrl: null, isDownloading: false};
+        this.startDownloadVideo = this.startDownloadVideo.bind(this);
         this.fetchVideo = this.fetchVideo.bind(this);
-        this.startDownloadVideo();
+        this.downloadVideoTimeout = null
+    }
+
+    componentWillUnmount() {
+        if (this.downloadVideoTimeout !== null) {
+            clearTimeout(this.downloadVideoTimeout)
+        }
     }
 
     startDownloadVideo() {
+        this.setState({isDownloading: true});
         fetch(App.URL + "/" + this.props.video.id,
             {
                 method: 'POST'
             }).then(response => {
             if (response.status === 200) {
-                setTimeout(this.fetchVideo, Video.FETCH_VIDEO_PERIODIC)
+                this.downloadVideoTimeout = setTimeout(this.fetchVideo, Video.FETCH_VIDEO_PERIODIC)
             }
         });
     }
@@ -29,20 +39,37 @@ export default class Video extends Component {
                     method: 'GET'
                 }).then(response => {
                 if (response.status === 200) {
-                    this.setState({downloadUrl: App.URL + "/" + this.props.video.id+"/download"});
-                    this.props.onComplete()
+                    this.setState({downloadUrl: App.URL + "/" + this.props.video.id + "/download"});
                 }
                 else {
-                    setTimeout(this.fetchVideo, Video.FETCH_VIDEO_PERIODIC)
+                    this.downloadVideoTimeout = setTimeout(this.fetchVideo, Video.FETCH_VIDEO_PERIODIC)
                 }
             });
         }
     }
 
     render() {
+        const createProcessArea = () => {
+            return (
+                <div className='Flex-div'>
+                    <Button disabled>{this.props.video.name}</Button>
+                    {this.state.isDownloading ?
+                        <div className='Download-Video'>
+                            <PulseLoader
+                                loading={this.state.isDownloading}
+                                sizeUnit={"px"}
+                                size={15}
+                                color={"blue"}
+                            /></div> :
+                        <Button onClick={this.startDownloadVideo}>process</Button>}
+                </div>
+            )
+        };
         return (
             <div>
-                {this.state.downloadUrl !== null && <a href={this.state.downloadUrl}>{this.props.video.name}</a>}
+                {this.state.downloadUrl === null && createProcessArea()}
+                {this.state.downloadUrl !== null &&
+                <Button href={this.state.downloadUrl}>{this.props.video.name}</Button>}
             </div>
         );
     }

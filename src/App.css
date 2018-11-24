@@ -26,9 +26,18 @@
     margin-left: 5%;
 }
 
+.Flex-div {
+    display: inline-flex;
+}
+
 .Download-url {
     margin-top: 5px;
-    display: inline-block;
+    display: inline-flex;
+}
+
+.Download-Video {
+    margin-top: 5px;
+    display: inline-flex;
 }
 
 .Video-loading {

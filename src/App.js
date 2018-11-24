@@ -22,25 +22,20 @@ class App extends Component {
             this.setState({youUrl: text.target.value})
         };
         const download = () => {
-            this.setState({isLoading: true});
-            fetch(App.URL, {
-                body: this.state.youUrl,
-                method: "POST"
-            }).then(value => {
-                value.json().then(value1 => {
-                    let vids = this.state.videos;
-                    for (let vid of value1) {
-                        vids.push(vid)
-                    }
-                    this.setState({videos: vids})
+            if (!this.state.isLoading) {
+                this.setState({isLoading: true, videos: []});
+                fetch(App.URL, {
+                    body: this.state.youUrl,
+                    method: "POST"
+                }).then(value => {
+                    value.json().then(value1 => {
+                        let vids = this.state.videos;
+                        for (let vid of value1) {
+                            vids.push(vid)
+                        }
+                        this.setState({videos: vids, isLoading: false})
+                    })
                 })
-            })
-        };
-        let numOfDownloads = this.state.videos.length;
-        const downloadComplete = () => {
-            numOfDownloads--;
-            if (numOfDownloads === 0) {
-                this.setState({isLoading: false})
             }
         };
         return (
@@ -60,6 +55,7 @@ class App extends Component {
                         Download
                     </Button>
                 </div>
+                {this.state.videos.map(video => <Video key={video.id} video={video}/>)}
                 <div className='Video-loading'>
                     <RingLoader loading={this.state.isLoading}
                                 sizeUnit={"px"}
@@ -67,7 +63,6 @@ class App extends Component {
                                 color={"blue"}
                     />
                 </div>
-                {this.state.videos.map(video => <Video key={video.id} video={video} onComplete={downloadComplete}/>)}
             </div>
         );
     }
