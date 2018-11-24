@@ -1,0 +1,23 @@
+language: node_js
+node_js:
+  - "stable"
+cache:
+  directories:
+    - node_modules
+script:
+  - npm test
+before_deploy:
+  - sed -i '/"dependencies":\ {/i"homepage":\ ".",' package.json
+  - SRC='<div id="root"></div>';DST='<a href="https://github.com/samitc/vigoler-ui"><img style="position:absolute; top:0; right:0; border:0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub"></a>';sed -i "s^$SRC^$DST$SRC^" public/index.html
+  - SRC="static URL = \"";DST="static URL = \"$SERVER_URL/videos\";";sed -i "s^$SRC.*^$DST^" src/App.js
+  - npm run build
+  
+deploy:
+  - provider: pages
+    local_dir: build
+    skip_cleanup: true
+    github_token: $GITHUB_TOKEN
+    committer_from_gh: true
+    target_branch: gh-pages
+    on:
+      branch: master
