@@ -50,6 +50,24 @@ class App extends Component {
                 })
             }
         };
+        const addVideo = (id) => {
+            fetch(App.URL + "/" + id, {
+                method: "GET"
+            }).then(response => {
+                if (response.ok) {
+                    response.json().then(video => {
+                        let vids = this.state.videos;
+                        video.finish = true
+                        vids.push(video)
+                        this.setState({ videos: vids })
+                    })
+                } else {
+                    this.setState({ error: true })
+                }
+            }, (e) => {
+                console.log(e)
+            })
+        }
         return (
             <div className="App">
                 <header className="App-header">
@@ -83,7 +101,7 @@ class App extends Component {
                         Download
                     </Button>
                 </div>
-                {this.state.videos.map(video => <Video key={video.id} video={video} />)}
+                {this.state.videos.map(video => <Video key={video.id} video={video} addVideoCallback={addVideo} />)}
                 <div className='Video-loading'>
                     <RingLoader loading={this.state.isLoading}
                         sizeUnit={"px"}

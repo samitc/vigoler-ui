@@ -1,14 +1,18 @@
-import React, {Component} from 'react'
+import React, { Component } from 'react'
 import App from '../App.js'
 import Button from '@material-ui/core/Button'
-import {PulseLoader} from 'react-spinners';
+import { PulseLoader } from 'react-spinners';
 
 export default class Video extends Component {
     static FETCH_VIDEO_PERIODIC = 1000;
 
     constructor(props) {
         super(props);
-        this.state = {downloadUrl: null, isDownloading: false};
+        let downloadUrl = null
+        if (props.video.finish) {
+            downloadUrl = App.URL + "/" + this.props.video.id + "/download";
+        }
+        this.state = { downloadUrl: downloadUrl, isDownloading: false, ids: [] };
         this.startDownloadVideo = this.startDownloadVideo.bind(this);
         this.fetchVideo = this.fetchVideo.bind(this);
         this.downloadVideoTimeout = null
@@ -21,15 +25,15 @@ export default class Video extends Component {
     }
 
     startDownloadVideo() {
-        this.setState({isDownloading: true});
+        this.setState({ isDownloading: true });
         fetch(App.URL + "/" + this.props.video.id,
             {
                 method: 'POST'
             }).then(response => {
-            if (response.status === 200) {
-                this.downloadVideoTimeout = setTimeout(this.fetchVideo, Video.FETCH_VIDEO_PERIODIC)
-            }
-        });
+                if (response.status === 200) {
+                    this.downloadVideoTimeout = setTimeout(this.fetchVideo, Video.FETCH_VIDEO_PERIODIC)
+                }
+            });
     }
 
     fetchVideo() {
@@ -38,13 +42,22 @@ export default class Video extends Component {
                 {
                     method: 'GET'
                 }).then(response => {
-                if (response.status === 200) {
-                    this.setState({downloadUrl: App.URL + "/" + this.props.video.id + "/download"});
-                }
-                else {
-                    this.downloadVideoTimeout = setTimeout(this.fetchVideo, Video.FETCH_VIDEO_PERIODIC)
-                }
-            });
+                    if (response.status === 200) {
+                        this.setState({ downloadUrl: App.URL + "/" + this.props.video.id + "/download" });
+                    }
+                    else if (response.status === 202) {
+                        response.json().then(video => {
+                            if (video.ids != null) {
+                                let newIds = video.ids.filter(x => !this.state.ids.includes(x));
+                                for (let id of newIds) {
+                                    this.props.addVideoCallback(id)
+                                }
+                                this.setState({ ids: video.ids })
+                            }
+                            this.downloadVideoTimeout = setTimeout(this.fetchVideo, Video.FETCH_VIDEO_PERIODIC)
+                        })
+                    }
+                });
         }
     }
 
@@ -69,7 +82,7 @@ export default class Video extends Component {
             <div>
                 {this.state.downloadUrl === null && createProcessArea()}
                 {this.state.downloadUrl !== null &&
-                <Button href={this.state.downloadUrl}>{this.props.video.name}</Button>}
+                    <Button href={this.state.downloadUrl}>{this.props.video.name}</Button>}
             </div>
         );
     }
